@@ -1,35 +1,36 @@
-def add_time(start, duration, day=None):
+def add_time(start, add, day=None):
+    time, period = start.split()
+    hour, minutes = map(int, time.split(':'))  # converting everything to int
+    addH, addM = map(int, add.split(':'))
+    midday = ('PM', 'AM')
+    new_day = ''
+    later = ''
 
-    start_time = start.split()
-    start_time_hour = int(start_time[0].split(':')[0])
-    start_time_min = int(start_time[0].split(':')[1])
-    start_time_ampm = start_time[1]
+    carry, minutes = divmod(minutes + addM, 60)
+    hour += carry
+    # 'cycles' is # of 12-hours (half days) that 'hour' exceeds
+    cycles, hour = divmod(hour + addH, 12)
+    period = abs(midday.index(period)-(cycles % 2))
+    # 'passed' describes the number of days passed
+    passed = (period + cycles) // 2
 
-    duration_time = duration.split(':')
-    duration_time_hour = int(duration_time[0])
-    duration_time_min = int(duration_time[1])
+    if hour == 0:  # basically an edge case created from my modulus calculations
+        hour = 12
 
-    new_time_hour = start_time_hour + duration_time_hour
-    new_time_min = start_time_min + duration_time_min
+    if minutes < 10:  # standardizing time format, 12:1 -> 12:01
+        minutes = f'0{minutes}'
 
-    if new_time_min >= 60:
-        new_time_hour += 1
-        new_time_min -= 60
-        if new_time_min < 10:
-            new_time_min = '0' + str(new_time_min)
+    if day:
+        week = ('Sunday', 'Monday', 'Tuesday', 'Wednesday',
+                'Thursday', 'Friday', 'Saturday')
+        new_day = f', {week[(week.index(day.capitalize()) + passed) % 7]}'
 
-    if new_time_hour > 12:
-        new_time_hour -= 12
-        if start_time_ampm == 'AM':
-            start_time_ampm = 'PM'
-        else:
-            start_time_ampm = 'AM'
+    # Just some string formatting
+    if passed == 1:
+        later = ' (next day)'
+    elif passed != 0:
+        later = f' ({passed} days later)'
 
-    if day is not None:
-        new_time = str(new_time_hour) + ':' + \
-            str(new_time_min) + ' ' + start_time_ampm + ', ' + day.capitalize()
-    else:
-        new_time = str(new_time_hour) + ':' + \
-            str(new_time_min) + ' ' + start_time_ampm
+    new_time = f'{hour}:{minutes} {midday[period]}{new_day}{later}'
 
     return new_time
